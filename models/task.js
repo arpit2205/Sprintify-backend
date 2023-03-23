@@ -52,6 +52,11 @@ const taskSchema = mongoose.Schema(
       required: true,
     },
 
+    attachments: {
+      type: Array,
+      default: [],
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,

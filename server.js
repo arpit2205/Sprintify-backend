@@ -8,7 +8,7 @@ var app = express();
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 app.use(passport.initialize());
 
 // MongoDB
@@ -46,6 +46,16 @@ app.use(
 );
 app.use("/api/brand-user/users", require("./routes/brandUser/public/users"));
 app.use("/api/brand-user/tasks", require("./routes/brandUser/public/tasks"));
+app.use("/api/brand-user/tasks", require("./routes/brandUser/manager/tasks"));
+app.use(
+  "/api/brand-user/sprints",
+  require("./routes/brandUser/manager/sprint")
+);
+app.use("/api/brand-user/sprints", require("./routes/brandUser/public/sprint"));
+app.use(
+  "/api/brand-user/tasks/comments",
+  require("./routes/brandUser/public/comment")
+);
 
 // Server
 var PORT = process.env.PORT || 5000;
