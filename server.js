@@ -4,6 +4,7 @@ require("dotenv").config();
 var passport = require("passport");
 var cors = require("cors");
 
+var routes = require("./routes");
 var app = express();
 
 // Middlewares
@@ -20,42 +21,8 @@ mongoose.connect(
   }
 );
 
-/* 
-Routes
-*/
-
-// Public routes
-app.use("/api/auth", require("./routes/auth/login"));
-
-// Super admin routes
-app.use("/api/super-admin/auth", require("./routes/superAdmin/auth"));
-app.use("/api/super-admin", require("./routes/superAdmin/manageAdmins"));
-
-// Brand admin routes
-app.use("/api/brand-admin/auth", require("./routes/brandAdmin/auth"));
-app.use("/api/brand-admin", require("./routes/brandAdmin/manageUsers"));
-
-// Brand user routes
-app.use(
-  "/api/brand-user/projects",
-  require("./routes/brandUser/public/project")
-);
-app.use(
-  "/api/brand-user/projects",
-  require("./routes/brandUser/manager/project")
-);
-app.use("/api/brand-user/users", require("./routes/brandUser/public/users"));
-app.use("/api/brand-user/tasks", require("./routes/brandUser/public/tasks"));
-app.use("/api/brand-user/tasks", require("./routes/brandUser/manager/tasks"));
-app.use(
-  "/api/brand-user/sprints",
-  require("./routes/brandUser/manager/sprint")
-);
-app.use("/api/brand-user/sprints", require("./routes/brandUser/public/sprint"));
-app.use(
-  "/api/brand-user/tasks/comments",
-  require("./routes/brandUser/public/comment")
-);
+// initialise routes
+routes(app);
 
 // Server
 var PORT = process.env.PORT || 5000;

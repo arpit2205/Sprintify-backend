@@ -36,7 +36,9 @@ router.post(
       project: project,
       duration: duration,
       isStarted: false,
+      isCompleted: false,
       startedAt: " ",
+      completedAt: " ",
     })
       .then(function (data) {
         res.status(201).json({ status: "success", data: data });
@@ -91,6 +93,36 @@ router.patch(
     )
       .then(function (data) {
         res.status(200).json({ status: "success", data: data });
+      })
+      .catch(function (error) {
+        res.status(500).json({ status: "error", data: error });
+      });
+  }
+);
+
+// complete sprint
+router.patch(
+  "/finish/:id",
+  passport.authenticate("jwt", { session: false }),
+  verifyBrandUser,
+  verifyManagerAccess,
+  function (req, res) {
+    var sprintId = req.params.id;
+
+    Sprint.findByIdAndUpdate(
+      sprintId,
+      {
+        isCompleted: true,
+        completedAt: new Date().toISOString(),
+      },
+      { new: true }
+    )
+      .then(function (data) {
+        Task.updateMany({ "sprint.sprintId": sprintId }, { sprint: null }).then(
+          function (result) {
+            res.status(200).json({ status: "success", data: data });
+          }
+        );
       })
       .catch(function (error) {
         res.status(500).json({ status: "error", data: error });

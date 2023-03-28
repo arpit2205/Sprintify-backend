@@ -40,7 +40,78 @@ var percentageOfTasksCompletedForAllSprints = function (projectId) {
   ];
 };
 
+var sprintTypeCounts = function (projectId) {
+  return [
+    {
+      $match: {
+        "project.projectId": projectId,
+        isDeleted: false,
+      },
+    },
+    {
+      $facet: {
+        activeSprints: [
+          { $match: { isStarted: true, isCompleted: false } },
+          { $count: "count" },
+        ],
+        upcomingSprints: [
+          { $match: { isStarted: false } },
+          { $count: "count" },
+        ],
+        completedSprints: [
+          { $match: { isCompleted: true } },
+          { $count: "count" },
+        ],
+        activeOverdueSprints: [
+          {
+            $match: {
+              isStarted: true,
+              isCompleted: false,
+              $expr: {
+                $gt: [
+                  { $subtract: [new Date(), { $toDate: "$startedAt" }] },
+                  { $multiply: ["$duration", 86400000] },
+                ],
+              },
+            },
+          },
+          { $count: "count" },
+        ],
+        completedOverdueSprints: [
+          {
+            $match: {
+              isStarted: true,
+              $expr: {
+                $gt: [
+                  { $subtract: [new Date(), { $toDate: "$startedAt" }] },
+                  { $multiply: ["$duration", 86400000] },
+                ],
+              },
+            },
+          },
+          { $count: "count" },
+        ],
+        onTimeCompleted: [
+          {
+            $match: {
+              isCompleted: true,
+              $expr: {
+                $lte: [
+                  { $subtract: [new Date(), { $toDate: "$startedAt" }] },
+                  { $multiply: ["$duration", 86400000] },
+                ],
+              },
+            },
+          },
+          { $count: "count" },
+        ],
+      },
+    },
+  ];
+};
+
 module.exports = {
   percentageOfTasksCompletedForAllSprints:
     percentageOfTasksCompletedForAllSprints,
+  sprintTypeCounts: sprintTypeCounts,
 };

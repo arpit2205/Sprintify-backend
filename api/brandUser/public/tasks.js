@@ -20,6 +20,8 @@ var {
   numberOfCompletedTasksWeekly,
   numberOfTotalAndCompletedTasks,
   percentOfTasksByStatus,
+  fiveMostActiveUsers,
+  numberOfUnassignedTasks,
 } = require("../../../aggregations/task");
 
 // Multer s3 config
@@ -90,9 +92,40 @@ router.get(
   function (req, res) {
     var projectId = req.params.id;
 
-    Task.find({ "project.projectId": projectId, isDeleted: false })
+    var page = req.query.page;
+    var limit = req.query.limit;
+    var text = req.query.text;
+    var status = req.query.status;
+    var type = req.query.type;
+    var priority = req.query.priority;
+    var sprint = req.query.sprint;
+
+    var queries = {};
+
+    queries["project.projectId"] = projectId;
+    queries.isDeleted = false;
+    if (text !== "undefined" && text !== "")
+      queries.title = { $regex: text, $options: "i" };
+    if (status !== "undefined" && status !== "") queries.status = status;
+    if (type !== "undefined" && type !== "") queries.type = type;
+    if (priority !== "undefined" && priority !== "")
+      queries.priority = priority;
+    if (sprint !== "undefined" && sprint !== "" && sprint !== "null")
+      queries["sprint.name"] = sprint;
+
+    Task.count(queries)
       .then(function (data) {
-        res.status(200).json({ status: "success", data: data });
+        var count = data;
+
+        Task.find(queries)
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(10)
+          .then(function (data) {
+            res
+              .status(200)
+              .json({ status: "success", data: data, totalDocuments: count });
+          });
       })
       .catch(function (error) {
         res.status(500).json({ status: "error", data: error });
@@ -297,6 +330,8 @@ router.get(
       TaskLog.aggregate(numberOfCompletedTasksWeekly(projectId)),
       Task.aggregate(numberOfTotalAndCompletedTasks(projectId)),
       Task.aggregate(percentOfTasksByStatus(projectId)),
+      TaskLog.aggregate(fiveMostActiveUsers(projectId)),
+      Task.aggregate(numberOfUnassignedTasks(projectId)),
     ])
       .then(function (data) {
         res.status(200).json({
@@ -306,6 +341,8 @@ router.get(
             weeklyCompletedTasks: data[1],
             percentCompletedTasks: data[2],
             percentTasksByStatus: data[3],
+            fiveMostActiveUsers: data[4],
+            unassignedTasksCount: data[5],
           },
         });
       })

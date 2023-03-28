@@ -4,7 +4,7 @@ var numberOfCreatedTasksWeekly = function (projectId) {
     {
       $match: {
         createdAt: {
-          $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          $gte: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
           $lte: new Date(),
         },
         isDeleted: false,
@@ -37,7 +37,7 @@ var numberOfCompletedTasksWeekly = function (projectId) {
     {
       $match: {
         createdAt: {
-          $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          $gte: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
           $lte: new Date(),
         },
         isDeleted: false,
@@ -197,9 +197,48 @@ var percentOfTasksByStatus = function (projectId) {
   ];
 };
 
+var fiveMostActiveUsers = function (projectId) {
+  return [
+    {
+      $match: {
+        isDeleted: false,
+        "project.projectId": projectId,
+      },
+    },
+    {
+      $group: {
+        _id: "$user.email",
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 5 },
+  ];
+};
+
+var numberOfUnassignedTasks = function (projectId) {
+  return [
+    {
+      $match: {
+        assignedTo: null,
+        isDeleted: false,
+        "project.projectId": projectId,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        count: { $sum: 1 },
+      },
+    },
+  ];
+};
+
 module.exports = {
   numberOfCreatedTasksWeekly: numberOfCreatedTasksWeekly,
   numberOfCompletedTasksWeekly: numberOfCompletedTasksWeekly,
   numberOfTotalAndCompletedTasks: numberOfTotalAndCompletedTasks,
   percentOfTasksByStatus: percentOfTasksByStatus,
+  fiveMostActiveUsers: fiveMostActiveUsers,
+  numberOfUnassignedTasks: numberOfUnassignedTasks,
 };
