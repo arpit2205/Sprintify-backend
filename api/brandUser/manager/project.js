@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+var mongoose = require("mongoose");
 
 var Project = require("../../../models/project");
 var User = require("../../../models/user");
@@ -93,6 +94,156 @@ router.get(
       .catch(function (error) {
         res.status(500).json({ status: "error", data: error });
       });
+  }
+);
+
+// edit project details
+router.patch(
+  "/edit-details/:id",
+  passport.authenticate("jwt", { session: false }),
+  verifyBrandUser,
+  verifyManagerAccess,
+  function (req, res) {
+    var projectId = req.params.id;
+
+    var title = req.body.title;
+    var description = req.body.description;
+    var status = req.body.status;
+
+    var queries = {};
+    var projectMembersQueries = {};
+
+    if (title) {
+      queries.title = title;
+      projectMembersQueries["project.title"] = title;
+    }
+    if (description) {
+      queries.description = description;
+      projectMembersQueries["project.description"] = description;
+    }
+    if (status) {
+      queries.status = status;
+      projectMembersQueries["project.status"] = status;
+    }
+
+    // 1. Check if the user is project owner
+    Project.find({ _id: projectId, "owner.userId": req.user._id })
+      .then(function (found) {
+        if (found.length !== 0) {
+          Project.findOneAndUpdate({ _id: projectId }, queries, { new: true })
+            .then(function (updatedProject) {
+              ProjectMembers.updateMany(
+                { "project._id": mongoose.Types.ObjectId(projectId) },
+                projectMembersQueries
+              )
+                .then(function (data) {
+                  res
+                    .status(200)
+                    .json({ status: "success", data: updatedProject });
+                })
+                .catch(function (error) {
+                  res.status(500).json({ status: "error", data: error });
+                });
+            })
+            .catch(function (error) {
+              res.status(500).json({ status: "error", data: error });
+            });
+        } else {
+          res
+            .status(401)
+            .json({ status: "error", data: { message: "Access denied" } });
+        }
+      })
+      .catch(function (error) {
+        res.status(500).json({ status: "error", data: error });
+      });
+
+    //TODO: 2. Check if user is a senior manager
+  }
+);
+
+// add members to an existing project
+router.post(
+  "/add-members/:id",
+  passport.authenticate("jwt", { session: false }),
+  verifyBrandUser,
+  verifyManagerAccess,
+  function (req, res) {
+    var projectId = req.params.id;
+
+    var members = req.body.members;
+
+    // 1. check if user is owner of project
+    Project.find({ _id: projectId, "owner.userId": req.user._id })
+      .then(function (found) {
+        // -find the project
+        if (found.length !== 0) {
+          var project = found[0];
+
+          var projectMembersArray = [];
+
+          for (var i = 0; i < members.length; i++) {
+            projectMembersArray.push({
+              project: project,
+              user: members[i],
+            });
+          }
+
+          ProjectMembers.insertMany(projectMembersArray)
+            .then(function (data) {
+              res.status(200).json({ status: "success", data: data });
+            })
+            .catch(function (error) {
+              res.status(500).json({ status: "error", data: error });
+            });
+        } else
+          res
+            .status(401)
+            .json({ status: "error", data: { message: "Access denied" } });
+      })
+      .catch(function (error) {
+        res.status(500).json({ status: "error", data: error });
+      });
+
+    //TODO: 2. Check if user is a senior manager
+  }
+);
+
+// remove member from an existing project
+router.delete(
+  "/remove-member/:projectId/:userId",
+  passport.authenticate("jwt", { session: false }),
+  verifyBrandUser,
+  verifyManagerAccess,
+  function (req, res) {
+    var projectId = req.params.projectId;
+    var userId = req.params.userId;
+
+    // 1. check if user is owner of project
+    Project.find({ _id: projectId, "owner.userId": req.user._id })
+      .then(function (found) {
+        // -find the project
+        if (found.length !== 0) {
+          ProjectMembers.findOneAndDelete({
+            "project._id": mongoose.Types.ObjectId(projectId),
+            "user.userId": userId,
+          })
+            .then(function (data) {
+              res.status(200).json({ status: "success", data: data });
+            })
+            .catch(function (error) {
+              res.status(500).json({ status: "error", data: error });
+            });
+        } else
+          res
+            .status(401)
+            .json({ status: "error", data: { message: "Access denied" } });
+      })
+      .catch(function (error) {
+        res.status(500).json({ status: "error", data: error });
+      });
+
+    //TODO: 2. Check if user is a senior manager
   }
 );
 
