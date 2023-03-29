@@ -3,6 +3,7 @@ var router = express.Router();
 
 var Project = require("../../../models/project");
 var User = require("../../../models/user");
+var ProjectMembers = require("../../../models/projectMembers");
 
 // middlewares
 var verifyBrandUser = require("../../../middleware/verifyBrandUser");
@@ -24,7 +25,7 @@ router.post(
 
     // project creator
     members.push({
-      memberId: req.user._id,
+      userId: req.user._id.toString(),
       name: req.user.name,
       email: req.user.email,
       roles: req.user.roles,
@@ -45,10 +46,26 @@ router.post(
         email: req.user.email,
         roles: req.user.roles,
       },
-      members: members,
     })
-      .then(function (data) {
-        res.status(201).json({ status: "success", data: data });
+      .then(function (project) {
+        var projectMembersArray = [];
+
+        for (var i = 0; i < members.length; i++) {
+          projectMembersArray.push({
+            project: project,
+            user: members[i],
+          });
+        }
+
+        ProjectMembers.insertMany(projectMembersArray)
+          .then(function (data) {
+            res.status(201).json({ status: "success", data: project });
+          })
+          .catch(function (error) {
+            res.status(500).json({ status: "error", data: error });
+          });
+
+        // res.status(201).json({ status: "success", data: project });
       })
       .catch(function (error) {
         res.status(500).json({ status: "error", data: error });

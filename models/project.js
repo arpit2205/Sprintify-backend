@@ -22,10 +22,10 @@ const projectSchema = mongoose.Schema(
       type: Object,
       required: true,
     },
-    members: {
-      type: Array,
-      required: true,
-    },
+    // members: {
+    //   type: Array,
+    //   required: true,
+    // },
     isDeleted: {
       type: Boolean,
       default: false,
