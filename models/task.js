@@ -32,6 +32,11 @@ const taskSchema = mongoose.Schema(
       required: true,
     },
 
+    brand: {
+      type: Object,
+      required: true,
+    },
+
     sprint: {
       type: Object,
       default: null,

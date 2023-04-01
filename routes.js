@@ -9,6 +9,7 @@ module.exports = function (app) {
   // Brand admin routes
   app.use("/api/brand-admin/auth", require("./api/brandAdmin/auth"));
   app.use("/api/brand-admin", require("./api/brandAdmin/manageUsers"));
+  app.use("/api/brand-admin/stats", require("./api/brandAdmin/stats"));
 
   // Brand user routes
   app.use(

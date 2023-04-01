@@ -8,7 +8,7 @@ var Task = require("../../../models/task");
 var {
   percentageOfTasksCompletedForAllSprints,
   sprintTypeCounts,
-} = require("../../../aggregations/sprint");
+} = require("../../../aggregations/brandUser/sprint");
 
 // middlewares
 var verifyBrandUser = require("../../../middleware/verifyBrandUser");

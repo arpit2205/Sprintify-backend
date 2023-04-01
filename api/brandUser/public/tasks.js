@@ -22,7 +22,7 @@ var {
   percentOfTasksByStatus,
   fiveMostActiveUsers,
   numberOfUnassignedTasks,
-} = require("../../../aggregations/task");
+} = require("../../../aggregations/brandUser/task");
 
 // Multer s3 config
 var upload = multer({
@@ -62,6 +62,7 @@ router.post(
     var status = req.body.status;
     var type = req.body.type;
     var priority = req.body.priority;
+    var brand = req.user.brand;
 
     Task.create({
       taskId: taskId,
@@ -74,6 +75,7 @@ router.post(
       status: status,
       type: type,
       priority: priority,
+      brand: brand,
     })
       .then(function (data) {
         res.status(201).json({ status: "success", data: data });

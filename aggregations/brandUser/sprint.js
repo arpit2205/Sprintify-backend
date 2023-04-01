@@ -81,9 +81,15 @@ var sprintTypeCounts = function (projectId) {
           {
             $match: {
               isStarted: true,
+              isCompleted: true,
               $expr: {
                 $gt: [
-                  { $subtract: [new Date(), { $toDate: "$startedAt" }] },
+                  {
+                    $subtract: [
+                      { $toDate: "$completedAt" },
+                      { $toDate: "$startedAt" },
+                    ],
+                  },
                   { $multiply: ["$duration", 86400000] },
                 ],
               },
@@ -97,7 +103,12 @@ var sprintTypeCounts = function (projectId) {
               isCompleted: true,
               $expr: {
                 $lte: [
-                  { $subtract: [new Date(), { $toDate: "$startedAt" }] },
+                  {
+                    $subtract: [
+                      { $toDate: "$completedAt" },
+                      { $toDate: "$startedAt" },
+                    ],
+                  },
                   { $multiply: ["$duration", 86400000] },
                 ],
               },
