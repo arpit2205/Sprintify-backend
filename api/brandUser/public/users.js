@@ -39,7 +39,10 @@ router.get(
   function (req, res) {
     var projectId = req.params.id;
 
-    ProjectMembers.find({ "project._id": mongoose.Types.ObjectId(projectId) })
+    ProjectMembers.find({
+      "project._id": mongoose.Types.ObjectId(projectId),
+      isDeleted: false,
+    })
       .select({ user: 1 })
       .then(function (data) {
         var users = [];

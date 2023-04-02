@@ -35,6 +35,7 @@ router.get(
           ProjectMembers.find({
             "user.userId": req.user._id.toString(),
             "project.owner.userId": { $ne: req.user._id },
+            isDeleted: false,
           })
             .select({ project: 1 })
             .then(function (data) {
@@ -59,7 +60,10 @@ router.get(
 
     // if member, return the projects he/she is part of
     else if (req.user.roles.indexOf("member") !== -1) {
-      ProjectMembers.find({ "user.userId": req.user._id.toString() })
+      ProjectMembers.find({
+        "user.userId": req.user._id.toString(),
+        isDeleted: false,
+      })
         .select({ project: 1 })
         .then(function (data) {
           var projects = [];

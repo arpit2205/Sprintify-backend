@@ -5,6 +5,10 @@ var mongoose = require("mongoose");
 var Project = require("../../../models/project");
 var User = require("../../../models/user");
 var ProjectMembers = require("../../../models/projectMembers");
+var Comment = require("../../../models/comment");
+var Sprint = require("../../../models/sprint");
+var TaskLog = require("../../../models/taskLog");
+var Task = require("../../../models/task");
 
 // middlewares
 var verifyBrandUser = require("../../../middleware/verifyBrandUser");
@@ -244,6 +248,85 @@ router.delete(
       });
 
     //TODO: 2. Check if user is a senior manager
+  }
+);
+
+// delete a project and all of its instances in all collections
+router.delete(
+  "/delete-project/:id",
+  passport.authenticate("jwt", { session: false }),
+  verifyBrandUser,
+  verifyManagerAccess,
+  function (req, res) {
+    var projectId = req.params.id;
+    var userId = req.params.userId;
+
+    // 1. check if user is owner of project
+    Project.find({ _id: projectId, "owner.userId": req.user._id })
+      .then(function (found) {
+        if (found.length !== 0) {
+          var session;
+          mongoose
+            .startSession()
+            .then(function (_session) {
+              session = _session;
+              session.startTransaction();
+
+              return Promise.all([
+                Project.updateOne(
+                  { _id: projectId },
+                  { isDeleted: true }
+                ).session(session),
+                ProjectMembers.updateMany(
+                  { "project._id": mongoose.Types.ObjectId(projectId) },
+                  { isDeleted: true }
+                ).session(session),
+                Task.updateMany(
+                  { "project.projectId": projectId },
+                  { isDeleted: true }
+                ).session(session),
+                TaskLog.updateMany(
+                  { "project.projectId": projectId },
+                  { isDeleted: true }
+                ).session(session),
+                Sprint.updateMany(
+                  { "project.projectId": projectId },
+                  { isDeleted: true }
+                ).session(session),
+                Comment.updateMany(
+                  { "project.projectId": projectId },
+                  { isDeleted: true }
+                ).session(session),
+              ]);
+            })
+            .then(function (data) {
+              return session.commitTransaction();
+            })
+            .then(() => {
+              session.endSession();
+              res.status(200).json({
+                status: "success",
+                data: "Delete transaction successful",
+              });
+            })
+            .catch(function (error) {
+              if (session) {
+                session.abortTransaction().finally(function () {
+                  session.endSession();
+                  res.status(500).json({ status: "error", data: error });
+                });
+              } else {
+                res.status(500).json({ status: "error", data: error });
+              }
+            });
+        } else
+          res
+            .status(401)
+            .json({ status: "error", data: { message: "Access denied" } });
+      })
+      .catch(function (error) {
+        res.status(500).json({ status: "error", data: error });
+      });
   }
 );
 
