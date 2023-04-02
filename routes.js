@@ -5,6 +5,7 @@ module.exports = function (app) {
   // Super admin routes
   app.use("/api/super-admin/auth", require("./api/superAdmin/auth"));
   app.use("/api/super-admin", require("./api/superAdmin/manageAdmins"));
+  app.use("/api/super-admin/stats", require("./api/superAdmin/stats"));
 
   // Brand admin routes
   app.use("/api/brand-admin/auth", require("./api/brandAdmin/auth"));
