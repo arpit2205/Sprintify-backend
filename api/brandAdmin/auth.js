@@ -22,7 +22,7 @@ router.post(
     var email = req.body.email;
     var password = req.body.password;
     var brand = req.user.brand;
-    var role = req.body.role; // manager or member
+    var role = req.body.role; // director or manager or member
 
     //TODO: validations
 
@@ -32,11 +32,20 @@ router.post(
       Permissions.findOne({ role: role })
         .then(function (data) {
           // create new user
+          var rolesArr = ["brand_user"];
+          if (role === "member") {
+            rolesArr.push("member");
+          } else if (role === "manager") {
+            rolesArr.push("manager");
+          } else if (role === "director") {
+            rolesArr.push("manager");
+            rolesArr.push("director");
+          }
           User.create({
             name: name,
             email: email,
             password: hashedPassword,
-            roles: ["brand_user", role],
+            roles: rolesArr,
             permissions: data.permissions,
             brand: brand,
             isSuperAdmin: false,
