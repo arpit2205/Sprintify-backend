@@ -14,7 +14,7 @@ app.use(passport.initialize());
 
 // MongoDB
 mongoose.connect(
-  `mongodb+srv://posist:n7Uakwdgs8fAB0qb@cluster0.m27zehu.mongodb.net/posist_app?retryWrites=true&w=majority`,
+  `mongodb+srv://posist:${process.env.MONGO_PASS}.m27zehu.mongodb.net/posist_app?retryWrites=true&w=majority`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
